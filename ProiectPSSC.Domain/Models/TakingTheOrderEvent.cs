@@ -14,6 +14,12 @@ namespace ProiectPSSC.Domain.Models
         public record TakingTheOrderSuccededEvent : ITakingTheOrderEvent
         { }
         public record TakingTheOrderFailedEvent : ITakingTheOrderEvent
-        { }
+        {
+            public TakingTheOrderFailedEvent (string reason)
+            {
+                Reason = reason;
+            }
+            public string Reason { get; }
+        }
     }
 }

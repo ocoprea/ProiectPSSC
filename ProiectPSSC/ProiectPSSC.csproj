@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ProiectPSSC.Domain\ProiectPSSC.Domain.csproj" />
   </ItemGroup>
 </Project>

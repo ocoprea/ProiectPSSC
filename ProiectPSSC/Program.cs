@@ -59,6 +59,21 @@ namespace ProiectPSSC
             TakingTheOrderCommand command = new(listOfProducts.ToArray());
             TakingTheOrderWorkflow workflow = new();
             var result = await workflow.ExecuteAsync(command);
+            result.Match(whenTakingTheOrderSuccededEvent: @event =>
+                        {
+                            Console.Clear();
+                            Console.WriteLine("Comanda a fost preluata cu succes !");
+                            Console.WriteLine();
+                            return @event;
+                        },
+                         whenTakingTheOrderFailedEvent: @event =>
+                         {
+                             Console.Clear();
+                             Console.WriteLine("Comanda nu a fost preluata !");
+                             Console.WriteLine(@event.Reason);
+                             Console.WriteLine();
+                             return @event;
+                         });
         }
         static async Task<List<UnvalidatedProduct>> readProducts()
         {
@@ -68,19 +83,26 @@ namespace ProiectPSSC
             {
                 string  ? id, quantity;
                 string ? existingQuantity;
+
                 Console.Write("Id produs: ");
                 id = Console.ReadLine();
+                if (string.IsNullOrEmpty(id))
+                    break;
+
                 Console.Write("Caltitate: ");
                 quantity = Console.ReadLine();
-                if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(quantity))
+                if (string.IsNullOrEmpty(quantity))
                     break;
+
                 if (products.TryGetValue(id, out existingQuantity))
                     products[id] = (int.Parse(products[id]) + int.Parse(quantity)).ToString();
                 else
                     products[id] = quantity;
             } while (true);
+
             foreach (var item in products)
                 unvalidatedProducts_.Add(new UnvalidatedProduct(item.Key, item.Value));
+
             return unvalidatedProducts_;
         }
     }
