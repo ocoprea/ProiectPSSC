@@ -10,7 +10,7 @@ namespace ProiectPSSC.Domain.Models
 {
     public record ProductId
     {
-        string Value { get; }
+        public string Value { get; }
         private static Regex model = new Regex("^[A-D]{1}[0-9]{3}$");
         private ProductId(string value)
         {

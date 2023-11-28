@@ -9,9 +9,13 @@
 
   <ItemGroup>
     <PackageReference Include="LanguageExt.Core" Version="4.4.7" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.12" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="6.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="6.0.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\ProiectPSSC.Data\ProiectPSSC.Data.csproj" />
     <ProjectReference Include="..\ProiectPSSC.Domain\ProiectPSSC.Domain.csproj" />
   </ItemGroup>
 </Project>

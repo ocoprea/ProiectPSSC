@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static ProiectPSSC.Domain.Models.Cart;
 using LanguageExt;
+using ProiectPSSC.Domain.Repositories;
 
 namespace ProiectPSSC.Domain.Operations
 {
@@ -35,6 +36,29 @@ namespace ProiectPSSC.Domain.Operations
             }
             return new PreValidatedCart(validatedProducts_.ToArray());
         }
+        public static async Task<ICart> ValidateProducts(ICart preValidatedCart, IProductsRepository productsRepository) => preValidatedCart.Match(
+            whenUnvalidatedCart: unvalidatedCart => unvalidatedCart,
+            whenPreValidatedCart: preValidatedCart_ =>
+            {
+                string? reason = null;
+                var products = preValidatedCart_.ValidatedProducts;
+                foreach (var item in products)
+                {
+                    var result = productsRepository.TryGetExistingProduct(item.productId.Value);
+                    result.Match(Succ: _ => { },
+                                 Fail: _ => { reason = "Product not found"; });
+
+                    if (!string.IsNullOrEmpty(reason))
+                    {
+                        return new InvalidatedCart(null, reason + ", ProductId: " + item.productId.Value);
+                    }
+                }
+                return new ValidatedCart(preValidatedCart_.ValidatedProducts); 
+            },
+            whenValidatedCart: validatedCart => validatedCart,
+            whenInvalidatedCart: invalidatedCart => invalidatedCart,
+            whenCalculatedCart: calculatedCart => calculatedCart
+        );
         private static TryAsync<ProductId> TryParseProductId(string id) => async () =>
         {
             ProductId productId;
@@ -48,15 +72,6 @@ namespace ProiectPSSC.Domain.Operations
             ProductQuantity productQuantity;
             if (ProductQuantity.TryParse(quantity, out productQuantity))
                 return productQuantity;
-            else
-                throw new Exception();
-        };
-        private static TryAsync<ValidatedProduct> TryValidateProduct(string id, string quantity) => async () =>
-        {
-            ProductId id_;
-            ProductQuantity quantity_;
-            if (ProductId.TryParse(id, out id_) && ProductQuantity.TryParse(quantity, out quantity_))
-                return new ValidatedProduct(id_, quantity_);
             else
                 throw new Exception();
         };

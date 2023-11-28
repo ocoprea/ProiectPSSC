@@ -1,14 +1,27 @@
-﻿using ProiectPSSC.Domain;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.EntityFrameworkCore;
+using ProiectPSSC.Domain;
 using ProiectPSSC.Domain.Commands;
 using ProiectPSSC.Domain.Models;
 using ProiectPSSC.Domain.Workflows;
+using System.Threading.Tasks;
+using ProiectPSSC.Data;
+using ProiectPSSC.Data.Repositories;
 
 namespace ProiectPSSC
 {
     internal class Program
     {
+        private static string ConnectionString = "Server=localhost\\SQLEXPRESS;Database=ProiectPSSC;Trusted_Connection=True";
         static async Task<int> Main(string[] args)
         {
+            using ILoggerFactory loggerFactory = ConfigureLoggerFactory();
+            ILogger<TakingTheOrderWorkflow> logger = loggerFactory.CreateLogger<TakingTheOrderWorkflow>();
+            var dbContextBuilder = new DbContextOptionsBuilder<OrderingContext>()
+                                                .UseSqlServer(ConnectionString)
+                                                .UseLoggerFactory(loggerFactory);
+            OrderingContext context = new OrderingContext(dbContextBuilder.Options);
+
             int option;
             while (true)
             {
@@ -17,7 +30,7 @@ namespace ProiectPSSC
                 switch (option)
                 {
                     case 1:
-                        await PreluareComandaHandler();
+                        await PreluareComandaHandler(context);
                         break;
                     case 2:
                         Console.WriteLine("Inca nu e implementat :)");
@@ -53,11 +66,14 @@ namespace ProiectPSSC
                 return option;
             return -1;
         }
-        static async Task PreluareComandaHandler()
+        static async Task PreluareComandaHandler(OrderingContext context)
         {
+            ProductsRepository productsRepo = new(context);
+
             var listOfProducts = await readProducts();
             TakingTheOrderCommand command = new(listOfProducts.ToArray());
-            TakingTheOrderWorkflow workflow = new();
+            TakingTheOrderWorkflow workflow = new(productsRepo);
+
             var result = await workflow.ExecuteAsync(command);
             result.Match(whenTakingTheOrderSuccededEvent: @event =>
                         {
@@ -68,12 +84,24 @@ namespace ProiectPSSC
                         },
                          whenTakingTheOrderFailedEvent: @event =>
                          {
-                             Console.Clear();
+                             //Console.Clear();
+                             Console.WriteLine();
                              Console.WriteLine("Comanda nu a fost preluata !");
                              Console.WriteLine(@event.Reason);
                              Console.WriteLine();
                              return @event;
                          });
+        }
+        private static ILoggerFactory ConfigureLoggerFactory()
+        {
+            return LoggerFactory.Create(builder =>
+                                builder.AddSimpleConsole(options =>
+                                {
+                                    options.IncludeScopes = true;
+                                    options.SingleLine = true;
+                                    options.TimestampFormat = "hh:mm:ss ";
+                                })
+                                .AddProvider(new Microsoft.Extensions.Logging.Debug.DebugLoggerProvider()));
         }
         static async Task<List<UnvalidatedProduct>> readProducts()
         {

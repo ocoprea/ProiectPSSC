@@ -43,7 +43,7 @@ namespace ProiectPSSC.Domain.Models
                 UnvalidatedProducts = unvalidatedProducts;
                 Reason = reason;
             }
-            public IReadOnlyCollection<UnvalidatedProduct> UnvalidatedProducts { get; }
+            public IReadOnlyCollection<UnvalidatedProduct> ? UnvalidatedProducts { get; }
             public string Reason { get; }
         }
         public record CalculatedCart : ICart

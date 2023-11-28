@@ -3,9 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProiectPSSC", "ProiectPSSC\ProiectPSSC.csproj", "{3144E0D8-76F8-409D-A8CC-4E8C8ADCA659}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProiectPSSC", "ProiectPSSC\ProiectPSSC.csproj", "{3144E0D8-76F8-409D-A8CC-4E8C8ADCA659}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProiectPSSC.Domain", "ProiectPSSC.Domain\ProiectPSSC.Domain.csproj", "{22022439-21E4-4AA9-9D9F-EF0B0E1827FA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProiectPSSC.Domain", "ProiectPSSC.Domain\ProiectPSSC.Domain.csproj", "{22022439-21E4-4AA9-9D9F-EF0B0E1827FA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProiectPSSC.Data", "ProiectPSSC.Data\ProiectPSSC.Data.csproj", "{E8B4A800-AC51-40CA-8339-CD6F88F7D012}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{22022439-21E4-4AA9-9D9F-EF0B0E1827FA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{22022439-21E4-4AA9-9D9F-EF0B0E1827FA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{22022439-21E4-4AA9-9D9F-EF0B0E1827FA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E8B4A800-AC51-40CA-8339-CD6F88F7D012}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E8B4A800-AC51-40CA-8339-CD6F88F7D012}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E8B4A800-AC51-40CA-8339-CD6F88F7D012}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E8B4A800-AC51-40CA-8339-CD6F88F7D012}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
