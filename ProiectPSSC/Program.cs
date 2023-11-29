@@ -69,7 +69,6 @@ namespace ProiectPSSC
         static async Task PreluareComandaHandler(OrderingContext context)
         {
             ProductsRepository productsRepo = new(context);
-
             var listOfProducts = await readProducts();
             TakingTheOrderCommand command = new(listOfProducts.ToArray());
             TakingTheOrderWorkflow workflow = new(productsRepo);
@@ -77,14 +76,14 @@ namespace ProiectPSSC
             var result = await workflow.ExecuteAsync(command);
             result.Match(whenTakingTheOrderSuccededEvent: @event =>
                         {
-                            Console.Clear();
+                            //Console.Clear();
                             Console.WriteLine("Comanda a fost preluata cu succes !");
                             Console.WriteLine();
                             return @event;
                         },
                          whenTakingTheOrderFailedEvent: @event =>
                          {
-                             //Console.Clear();
+                             Console.Clear();
                              Console.WriteLine();
                              Console.WriteLine("Comanda nu a fost preluata !");
                              Console.WriteLine(@event.Reason);

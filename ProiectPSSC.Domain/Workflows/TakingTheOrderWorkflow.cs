@@ -24,12 +24,13 @@ namespace ProiectPSSC.Domain.Workflows
         {
             ICart cart = await TakingTheOrderOperations.PreValidateProducts(command.UnvalidatedProducts);
             cart = await TakingTheOrderOperations.ValidateProducts(cart, productsRepository_);
+            cart = await TakingTheOrderOperations.CalculateProducts(cart);
 
             return cart.Match(whenUnvalidatedCart: cart => new TakingTheOrderFailedEvent("reason") as ITakingTheOrderEvent,
-                       whenPreValidatedCart: cart => new TakingTheOrderFailedEvent("123"),
-                       whenValidatedCart: cart => new TakingTheOrderSuccededEvent(),
+                       whenPreValidatedCart: cart => new TakingTheOrderFailedEvent("432"),
+                       whenValidatedCart: cart => new TakingTheOrderFailedEvent("Total price cannot be calculated !"),
                        whenInvalidatedCart: cart => new TakingTheOrderFailedEvent(cart.Reason),
-                       whenCalculatedCart: cart => new TakingTheOrderFailedEvent("123"));
+                       whenCalculatedCart: cart => new TakingTheOrderSuccededEvent());
         }
     }
 }

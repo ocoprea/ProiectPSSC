@@ -14,17 +14,17 @@ namespace ProiectPSSC.Domain.Operations
     {
         public static async Task<ICart> PreValidateProducts(IReadOnlyCollection<UnvalidatedProduct> products)
         {
-            List<ValidatedProduct> validatedProducts_ = new();
+            List<PreValidatedProduct> preValidatedProducts_ = new();
             foreach (var product in products)
             {
                 string? reason_ = null;
                 var validProductId = await TryParseProductId(product.productId)
                     .ToEither(u => "Invalid product id [" + product.productId + "]");
-                validProductId.Match(Right: async productId => 
+                validProductId.Match(Right: async productId =>
                 {
                     var validQuantity = await TryParseProductQuantity(product.quantity)
                         .ToEither(u => "Invalid quantity [" + product.quantity + "]");
-                    validQuantity.Match(Right: validQuantity => { validatedProducts_.Add(new ValidatedProduct(productId, validQuantity)); },
+                    validQuantity.Match(Right: validQuantity => { preValidatedProducts_.Add(new PreValidatedProduct(productId, validQuantity)); },
                                         Left: reason => { reason_ = reason; });
                 },
                                      Left: reason => { reason_ = reason; });
@@ -34,31 +34,64 @@ namespace ProiectPSSC.Domain.Operations
                     return new InvalidatedCart(products, reason_);
                 }
             }
-            return new PreValidatedCart(validatedProducts_.ToArray());
+            return new PreValidatedCart(preValidatedProducts_.ToArray());
         }
-        public static async Task<ICart> ValidateProducts(ICart preValidatedCart, IProductsRepository productsRepository) => preValidatedCart.Match(
-            whenUnvalidatedCart: unvalidatedCart => unvalidatedCart,
-            whenPreValidatedCart: preValidatedCart_ =>
+        public static async Task<ICart> ValidateProducts(ICart preValidatedCart, IProductsRepository productsRepository) => await preValidatedCart.MatchAsync(
+            whenUnvalidatedCart: async unvalidatedCart => unvalidatedCart,
+            whenPreValidatedCart: async preValidatedCart_ =>
             {
                 string? reason = null;
-                var products = preValidatedCart_.ValidatedProducts;
-                foreach (var item in products)
-                {
-                    var result = productsRepository.TryGetExistingProduct(item.productId.Value);
-                    result.Match(Succ: _ => { },
-                                 Fail: _ => { reason = "Product not found"; });
+                var preValidatedProducts = preValidatedCart_.PreValidatedProducts;
+                List<ValidatedProduct> validatedProducts = new();
 
+                foreach (var item in preValidatedProducts)
+                {
+                    var result = await productsRepository.TryGetProduct(item.productId);
+                    result.Match(
+                        Succ: foundProduct =>
+                        {
+                            if (item.quantity.Value <= foundProduct.Item3)
+                                validatedProducts.Add(new ValidatedProduct(item.productId, item.quantity, foundProduct.Item3));
+                            else
+                                reason = "Insuficient quantity for Product Id: " + item.productId.Value;
+                        },
+                        Fail: exception =>
+                        {
+                            reason = "Product not found, Product Id: " + item.productId.Value;
+                        });
                     if (!string.IsNullOrEmpty(reason))
                     {
-                        return new InvalidatedCart(null, reason + ", ProductId: " + item.productId.Value);
+                        return new InvalidatedCart(null, reason);
                     }
                 }
-                return new ValidatedCart(preValidatedCart_.ValidatedProducts); 
+                return new ValidatedCart(validatedProducts.ToArray());
             },
-            whenValidatedCart: validatedCart => validatedCart,
-            whenInvalidatedCart: invalidatedCart => invalidatedCart,
-            whenCalculatedCart: calculatedCart => calculatedCart
+            whenValidatedCart: async validatedCart => validatedCart,
+            whenInvalidatedCart: async invalidatedCart => invalidatedCart,
+            whenCalculatedCart: async calculatedCart => calculatedCart
         );
+        public static async Task<ICart> CalculateProducts(ICart validatedCart) => await validatedCart.MatchAsync(
+            whenUnvalidatedCart: async unvalidatedCart => unvalidatedCart,
+            whenPreValidatedCart: async prevalidatedCart => prevalidatedCart,
+            whenValidatedCart: async validatedCart =>
+            {
+                List<CalculatedProduct> calculatedProducts = new();
+                bool exception_ = false;
+                var validatedProducts = validatedCart.ValidatedProducts;
+                foreach (var item in validatedProducts)
+                {
+                    var result = await TryCalculateTotalPrice(item);
+                    result.Match(Succ: (totalPrice) => calculatedProducts.Add(new CalculatedProduct(item.ProductId, item.Quantity, totalPrice)),
+                                 Fail: (exception) => exception_ = true);
+                    if (exception_)
+                        return validatedCart;
+                }
+                Console.WriteLine(calculatedProducts[0].totalPrice.ToString());
+                return new CalculatedCart(calculatedProducts.ToArray());
+            },
+            whenInvalidatedCart: async invalidatedCart => invalidatedCart,
+            whenCalculatedCart: async calculatedCart => calculatedCart
+            );
         private static TryAsync<ProductId> TryParseProductId(string id) => async () =>
         {
             ProductId productId;
@@ -74,6 +107,13 @@ namespace ProiectPSSC.Domain.Operations
                 return productQuantity;
             else
                 throw new Exception();
+        };
+        private static TryAsync<decimal> TryCalculateTotalPrice(ValidatedProduct validatedProduct) => async () =>
+        {
+            decimal totalPrice;
+            totalPrice = Convert.ToDecimal(validatedProduct.Price);
+            totalPrice *= validatedProduct.Quantity.Value;
+            return totalPrice;
         };
     }
 }

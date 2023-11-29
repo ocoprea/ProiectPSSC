@@ -21,11 +21,11 @@ namespace ProiectPSSC.Domain.Models
         }
         public record PreValidatedCart : ICart
         {
-            public PreValidatedCart(IReadOnlyCollection<ValidatedProduct> validatedProducts)
+            public PreValidatedCart(IReadOnlyCollection<PreValidatedProduct> preValidatedProducts)
             {
-                ValidatedProducts = validatedProducts;
+                PreValidatedProducts = preValidatedProducts;
             }
-            public IReadOnlyCollection<ValidatedProduct> ValidatedProducts { get; }
+            public IReadOnlyCollection<PreValidatedProduct> PreValidatedProducts { get; }
         }
 
         public record ValidatedCart : ICart

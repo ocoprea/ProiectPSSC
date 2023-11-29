@@ -6,5 +6,5 @@ using System.Threading.Tasks;
 
 namespace ProiectPSSC.Domain.Models
 {
-    public record ValidatedProduct(ProductId ProductId, ProductQuantity Quantity, double Price);
+    public record PreValidatedProduct (ProductId productId, ProductQuantity quantity);
 }
