@@ -10,7 +10,8 @@ namespace ProiectPSSC.Domain.Repositories
 {
     public interface IProductsRepository
     {
-        TryAsync<string> TryGetExistingProduct(string product);
         TryAsync<Tuple<string, int, double>> TryGetProduct(ProductId productId);
+        TryAsync<int> TryGetPrimaryKey(ProductId productId);
+        TryAsync<Unit> TryUpdateQuantity(int ProductPrimaryKey, int newQuantity);
     }
 }

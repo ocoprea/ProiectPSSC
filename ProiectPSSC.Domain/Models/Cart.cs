@@ -54,5 +54,15 @@ namespace ProiectPSSC.Domain.Models
             }
             public IReadOnlyCollection<CalculatedProduct> CalculatedProducts { get; }
         }
+        public record AddedToOrder : ICart
+        {
+            public AddedToOrder(IReadOnlyCollection<CalculatedProduct> calculatedProducts, int orderId)
+            {
+                CalculatedProducts = calculatedProducts;
+                OrderId = orderId;
+            }
+            public int OrderId { get; }
+            public IReadOnlyCollection<CalculatedProduct> CalculatedProducts { get; }
+        }
     }
 }

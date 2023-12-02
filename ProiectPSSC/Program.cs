@@ -7,6 +7,10 @@ using ProiectPSSC.Domain.Workflows;
 using System.Threading.Tasks;
 using ProiectPSSC.Data;
 using ProiectPSSC.Data.Repositories;
+using ProiectPSSC.Data.Models;
+using System.Security.Cryptography;
+using LanguageExt;
+using LanguageExt.ClassInstances;
 
 namespace ProiectPSSC
 {
@@ -20,7 +24,6 @@ namespace ProiectPSSC
             var dbContextBuilder = new DbContextOptionsBuilder<OrderingContext>()
                                                 .UseSqlServer(ConnectionString)
                                                 .UseLoggerFactory(loggerFactory);
-            OrderingContext context = new OrderingContext(dbContextBuilder.Options);
 
             int option;
             while (true)
@@ -30,7 +33,7 @@ namespace ProiectPSSC
                 switch (option)
                 {
                     case 1:
-                        await PreluareComandaHandler(context);
+                        await PreluareComandaHandler(dbContextBuilder);
                         break;
                     case 2:
                         Console.WriteLine("Inca nu e implementat :)");
@@ -66,18 +69,32 @@ namespace ProiectPSSC
                 return option;
             return -1;
         }
-        static async Task PreluareComandaHandler(OrderingContext context)
+        static async Task PreluareComandaHandler(DbContextOptionsBuilder<OrderingContext> dbContextBuilder)
         {
+            OrderingContext context = new OrderingContext(dbContextBuilder.Options);
             ProductsRepository productsRepo = new(context);
-            var listOfProducts = await readProducts();
-            TakingTheOrderCommand command = new(listOfProducts.ToArray());
-            TakingTheOrderWorkflow workflow = new(productsRepo);
+            OrdersRepository ordersRepo = new(context);
+            OrderedProductRepository orderedProductsRepo = new(context);
 
+            var listOfProducts = await readProducts();
+            if (listOfProducts.Count() == 0)
+            {
+                Console.Clear();
+                return;
+            }
+
+            TakingTheOrderCommand command = new(listOfProducts.ToArray());
+            TakingTheOrderWorkflow workflow = new(productsRepo, ordersRepo, orderedProductsRepo);
+            
             var result = await workflow.ExecuteAsync(command);
             result.Match(whenTakingTheOrderSuccededEvent: @event =>
                         {
-                            //Console.Clear();
-                            Console.WriteLine("Comanda a fost preluata cu succes !");
+                            Console.Clear();
+                            Console.Write("Comanda cu ID: ");
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.Write(@event.OrderId);
+                            Console.ResetColor();
+                            Console.WriteLine(" a fost generata cu succes !");
                             Console.WriteLine();
                             return @event;
                         },

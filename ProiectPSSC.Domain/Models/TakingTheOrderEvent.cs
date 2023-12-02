@@ -12,7 +12,13 @@ namespace ProiectPSSC.Domain.Models
     {
         public interface ITakingTheOrderEvent { }
         public record TakingTheOrderSuccededEvent : ITakingTheOrderEvent
-        { }
+        {
+            public TakingTheOrderSuccededEvent(int orderId)
+            {
+                OrderId = orderId;
+            }
+            public int OrderId { get; }
+        }
         public record TakingTheOrderFailedEvent : ITakingTheOrderEvent
         {
             public TakingTheOrderFailedEvent (string reason)
