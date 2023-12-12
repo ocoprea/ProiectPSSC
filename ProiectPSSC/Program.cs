@@ -11,6 +11,9 @@ using ProiectPSSC.Data.Models;
 using System.Security.Cryptography;
 using LanguageExt;
 using LanguageExt.ClassInstances;
+using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore.Query.Internal;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace ProiectPSSC
 {
@@ -40,7 +43,7 @@ namespace ProiectPSSC
                         Console.WriteLine();
                         break;
                     case 3:
-                        Console.WriteLine("Inca nu e implementat :)");
+                        await FinalizareComandaHandler(dbContextBuilder);
                         Console.WriteLine();
                         break;
                     case 4:
@@ -69,6 +72,16 @@ namespace ProiectPSSC
                 return option;
             return -1;
         }
+
+        static async Task FinalizareComandaHandler(DbContextOptionsBuilder<OrderingContext> dbContextBuilder)
+        {
+            OrderingContext context = new OrderingContext(dbContextBuilder.Options);
+            InvoiceRepository invoiceRepo = new(context);
+
+            var invoice = await readInfo();
+            
+        }
+
         static async Task PreluareComandaHandler(DbContextOptionsBuilder<OrderingContext> dbContextBuilder)
         {
             OrderingContext context = new OrderingContext(dbContextBuilder.Options);
@@ -148,6 +161,19 @@ namespace ProiectPSSC
                 unvalidatedProducts_.Add(new UnvalidatedProduct(item.Key, item.Value));
 
             return unvalidatedProducts_;
+        }
+        static async Task<Tuple<string, string, string>> readInfo()
+        {
+            string? id, adress, payMetod;
+            Console.Write("Id comanda: ");
+            id = Console.ReadLine();
+            Console.Write("Adressa de livrare: ");
+            adress = Console.ReadLine();
+            Console.Write("Metoda de plata: ");
+            payMetod = Console.ReadLine();
+
+            return Tuple.Create(id, adress, payMetod);
+
         }
     }
 }
