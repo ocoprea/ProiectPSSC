@@ -1,29 +1,41 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using ProiectPSSC.Domain.Exceptions;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace ProiectPSSC.Domain.Models
 {
     public record OrderId
     {
+        private static Regex ValidPattern = new Regex(@"^\d+$");
+
         public string Value { get; }
-        private static Regex model = new Regex(@"^\d+$");
+
         private OrderId(string value)
         {
-            Value = value;
-        }
-        public static bool TryParse(string value, out OrderId orderId)
-        {
-            orderId = null;
-            if (model.IsMatch(value))
+            if (IsValid(value))
             {
-                orderId = new OrderId(value);
-                return true;
+                Value = value;
             }
-            return false;
+            else
+            {
+                throw new InvalidOrderIDException("");
+            }
+        }
+
+        private static bool IsValid(string stringValue) => ValidPattern.IsMatch(stringValue);
+
+
+        public static bool TryParse(string stringValue, out OrderId orderID)
+        {
+            bool isValid = false;
+            orderID = null;
+
+            if (IsValid(stringValue))
+            {
+                isValid = true;
+                orderID = new OrderId(stringValue);
+            }
+
+            return isValid;
         }
     }
 }

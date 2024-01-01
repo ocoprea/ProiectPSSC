@@ -47,8 +47,7 @@ namespace ProiectPSSC
                         Console.WriteLine();
                         break;
                     case 4:
-                        Console.WriteLine("Inca e implementat :)");
-                        Console.WriteLine();
+                        await ShippingHandler();
                         break;
                     case 0:
                         return 0;
@@ -174,6 +173,70 @@ namespace ProiectPSSC
 
             return Tuple.Create(id, adress, payMetod);
 
+        }
+
+        static async Task ShippingHandler()
+        {
+            var listOfOrders = await readOrders();
+            if (listOfOrders.Count == 0)
+            {
+                Console.Clear();
+                return;
+            }
+
+            ShippingWorkflow workflow = new ShippingWorkflow();
+            var result = workflow.Execute(listOfOrders, order => ValidateOrder(order));
+
+            // Handle the result
+            result.SuccessEvents.ForEach(successEvent =>
+            {
+                Console.WriteLine($"Expedierea pentru comanda {successEvent.OrderId} a fost generata cu succes.");
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"AWB: {successEvent.Awb}");
+                Console.ResetColor();
+            });
+
+            result.FailureEvents.ForEach(failureEvent =>
+            {
+                Console.WriteLine($"Expedierea pentru comanda {failureEvent.OrderId} nu a fost facuta.");
+                Console.WriteLine($"Motiv: {failureEvent.Reason}");
+                Console.WriteLine();
+            });
+        }
+
+        static async Task<List<Order>> readOrders()
+        {
+            List<Order> listOfOrders = new();
+            do
+            {
+                var orderIdString = ReadValue("Id-ul comenzii: ");
+                if (string.IsNullOrEmpty(orderIdString))
+                {
+                    break;
+                }
+
+                if (OrderId.TryParse(orderIdString, out var orderId))
+                {
+                    listOfOrders.Add(new Order(orderId));
+                }
+                else
+                {
+                    Console.WriteLine("Invalid order ID. Please enter a valid Order ID.");
+                }
+            } while (true);
+            return listOfOrders;
+        }
+
+        private static bool ValidateOrder(Order order)
+        {
+            // Check if the order ID exists in the database
+            return true;
+        }
+
+        private static string? ReadValue(string prompt)
+        {
+            Console.Write(prompt);
+            return Console.ReadLine();
         }
     }
 }
