@@ -47,7 +47,7 @@ namespace ProiectPSSC
                         Console.WriteLine();
                         break;
                     case 4:
-                        Console.WriteLine("Inca nu e implementat :)");
+                        Console.WriteLine("Inca e implementat :)");
                         Console.WriteLine();
                         break;
                     case 0:
