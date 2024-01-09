@@ -96,11 +96,16 @@ namespace ProiectPSSC.Domain.Operations
             {
                 IInvoice invoice = validatedInfo;
                 var q = from item in validatedInfo.ValidateInfos
-                        select (item.OrderId, item.Price).ToTuple();
+                        select (item.OrderId, item.Price, item.OrderAdress, item.PayMetod).ToTuple();
                 int orderId = Convert.ToInt32(q.FirstOrDefault().Item1.Value);
                 float price = Convert.ToSingle(q.FirstOrDefault().Item2);
-                var result = from it in invoiceRepository.TrySaveNewInvoice(orderId, price).ToEither(ex => -1)
+                string orderadress = Convert.ToString(q.FirstOrDefault().Item3.Value);
+                string paymetod = Convert.ToString(q.FirstOrDefault().Item4.Value);
+                var result = from it in invoiceRepository.TrySaveNewInvoice(orderId, price, orderadress, paymetod).ToEither(ex => -1)
                              select it;
+                await result.Match(
+                    Right: invoiceId => invoice = new GeneratedInvoice(validatedInfo.ValidateInfos, invoiceId),
+                    Left: _ => invoice = validatedInfo);
                 return invoice;
             },
             whenGeneratedInvoice : async generateInvoice => generateInvoice

@@ -11,6 +11,6 @@ namespace ProiectPSSC.Domain.Repositories
     public interface IInvoiceRepository
     {
         TryAsync<Tuple<double, string>> TryFindCommand(OrderId id);
-        TryAsync<Tuple<int, float, float, float>> TrySaveNewInvoice(int orderId, float orderPrice);
+        TryAsync<Tuple<int, float, float, float>> TrySaveNewInvoice(int orderId, float orderPrice, string orderadress, string paymetod);
     }
 }

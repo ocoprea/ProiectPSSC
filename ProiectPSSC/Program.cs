@@ -90,14 +90,14 @@ namespace ProiectPSSC
             result.Match(whenGenerateTheInvoiceSuccededEvent: @event =>
             {
                 Console.Clear();
-                Console.WriteLine("Factura cu id-ul:");
-                Console.WriteLine(@event.InvoiceId);
-                Console.WriteLine(" a fost generata cu succes");
+                Console.WriteLine("Factura  a fost generata cu succes");
+                Console.WriteLine();
                 return @event;
             },
             whenGenerateTheInvoiceFailedEvent: @event =>
              {
                  Console.WriteLine("Factura nu a fost generata.");
+              
                  return @event;
              });
         }

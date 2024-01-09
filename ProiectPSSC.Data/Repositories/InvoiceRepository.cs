@@ -41,9 +41,10 @@ namespace ProiectPSSC.Data.Repositories
 
         };
 
-        public TryAsync<Tuple<int, float, float, float>> TrySaveNewInvoice(int orderId, float orderPrice) => async () =>
+        public TryAsync<Tuple<int, float, float, float>> TrySaveNewInvoice(int orderId, float orderPrice, string adresa, string metodaplata) => async () =>
         {
             InvoiceDto newInvoice = new();
+            OrderDto newOrder = new OrderDto();
             float discount;
             newInvoice.IdComanda = orderId;
             newInvoice.PretComanda = orderPrice;
@@ -56,7 +57,13 @@ namespace ProiectPSSC.Data.Repositories
 
             await invoiceContext_.AddAsync(newInvoice);
             await invoiceContext_.SaveChangesAsync();
-
+            newOrder.IdComanda = orderId;
+            newOrder.Adresa = adresa;
+            newOrder.PretTotal = orderPrice;
+            newOrder.MetodaPlata = metodaplata;
+            newOrder.StatusComanda = "Finalizata";
+            invoiceContext_.Update(newOrder);
+            await invoiceContext_.SaveChangesAsync();
             return new Tuple<int, float, float, float>(newInvoice.IdComanda, newInvoice.PretComanda, newInvoice.Discount, newInvoice.TotalPlata);
         };
 

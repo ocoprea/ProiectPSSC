@@ -50,11 +50,21 @@ namespace ProiectPSSC.Domain.Models
 
         public record GeneratedInvoice : IInvoice
         {
+            private IReadOnlyCollection<ValidateInfo> validateInfos;
+            private Tuple<int, float, float, float> invoiceId;
+
             public GeneratedInvoice(IReadOnlyCollection<ValidatedInfo> validatedInfos, int invoiceId)
             {
                 ValidatedInfos = validatedInfos;
                 InvoiceId = invoiceId;
             }
+
+            public GeneratedInvoice(IReadOnlyCollection<ValidateInfo> validateInfos, Tuple<int, float, float, float> invoiceId)
+            {
+                this.validateInfos = validateInfos;
+                this.invoiceId = invoiceId;
+            }
+
             public int InvoiceId { get; }
             public IReadOnlyCollection<ValidatedInfo> ValidatedInfos { get; }
         }
