@@ -12,7 +12,7 @@ namespace ProiectPSSC.Data.Models
         public int IdComanda { get; set; }
         public float PretComanda { get; set; }
         public float Discount {  get; set; }
-        public float TotalPlate {  get; set; }
+        public float TotalPlata {  get; set; }
 
 
     }

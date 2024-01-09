@@ -11,8 +11,9 @@ namespace ProiectPSSC.Domain.Models
     public static partial class Invoice
     {
         public interface IInvoice { }
-        public record UnvalidatedInfo : IInvoice { 
-        public UnvalidatedInfo(IReadOnlyCollection<UnvalidateInvoice> unvalidatedInvoices) 
+        public record UnvalidatedInfo : IInvoice
+        {
+            public UnvalidatedInfo(IReadOnlyCollection<UnvalidateInvoice> unvalidatedInvoices)
             {
                 UnvalidatedInfos = unvalidatedInvoices;
             }
@@ -24,18 +25,38 @@ namespace ProiectPSSC.Domain.Models
             {
                 PreValidateInvoices = preValidatedInvoices;
             }
-            public IReadOnlyCollection<PreValidateInvoice > PreValidateInvoices { get; }
+            public IReadOnlyCollection<PreValidateInvoice> PreValidateInvoices { get; }
         }
 
-        public record UnValidatedInfo : IInvoice
+        public record InValidatedInfo : IInvoice
         {
-            public UnValidatedInfo(IReadOnlyCollection<UnvalidateInvoice> unvalidatedInvoices, string reason)
+            public InValidatedInfo(IReadOnlyCollection<UnvalidateInvoice> unvalidatedInvoices, string reason)
             {
                 UnvalidatedInvoices = unvalidatedInvoices;
                 Reason = reason;
             }
             public IReadOnlyCollection<UnvalidateInvoice>? UnvalidatedInvoices { get; }
             public string Reason { get; }
+        }
+
+        public record ValidatedInfo : IInvoice
+        {
+            public ValidatedInfo(IReadOnlyCollection<ValidateInfo> validateInfos)
+            {
+                ValidateInfos = validateInfos;
+            }
+            public IReadOnlyCollection<ValidateInfo> ValidateInfos { get; }
+        }
+
+        public record GeneratedInvoice : IInvoice
+        {
+            public GeneratedInvoice(IReadOnlyCollection<ValidatedInfo> validatedInfos, int invoiceId)
+            {
+                ValidatedInfos = validatedInfos;
+                InvoiceId = invoiceId;
+            }
+            public int InvoiceId { get; }
+            public IReadOnlyCollection<ValidatedInfo> ValidatedInfos { get; }
         }
     }
 }

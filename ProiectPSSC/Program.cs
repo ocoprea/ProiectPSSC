@@ -27,6 +27,9 @@ namespace ProiectPSSC
             var dbContextBuilder = new DbContextOptionsBuilder<OrderingContext>()
                                                 .UseSqlServer(ConnectionString)
                                                 .UseLoggerFactory(loggerFactory);
+            var dbContextBuilder2 = new DbContextOptionsBuilder<InvoiceContext>()
+                                                .UseSqlServer(ConnectionString)
+                                                .UseLoggerFactory(loggerFactory);
 
             int option;
             while (true)
@@ -43,7 +46,7 @@ namespace ProiectPSSC
                         Console.WriteLine();
                         break;
                     case 3:
-                        await FinalizareComandaHandler(dbContextBuilder);
+                        await FinalizareComandaHandler(dbContextBuilder2);
                         Console.WriteLine();
                         break;
                     case 4:
@@ -72,13 +75,31 @@ namespace ProiectPSSC
             return -1;
         }
 
-        static async Task FinalizareComandaHandler(DbContextOptionsBuilder<OrderingContext> dbContextBuilder)
+        static async Task FinalizareComandaHandler(DbContextOptionsBuilder<InvoiceContext> dbContextBuilder)
         {
-            OrderingContext context = new OrderingContext(dbContextBuilder.Options);
+            InvoiceContext context = new InvoiceContext(dbContextBuilder.Options);
+            
             InvoiceRepository invoiceRepo = new(context);
 
             var invoice = await readInfo();
-            
+
+            GenerateTheInvoiceCommand command = new(invoice);
+            FinishingTheOrderWorkflow workflow = new(invoiceRepo);
+
+            var result = await workflow.ExecuteAsync(command);
+            result.Match(whenGenerateTheInvoiceSuccededEvent: @event =>
+            {
+                Console.Clear();
+                Console.WriteLine("Factura cu id-ul:");
+                Console.WriteLine(@event.InvoiceId);
+                Console.WriteLine(" a fost generata cu succes");
+                return @event;
+            },
+            whenGenerateTheInvoiceFailedEvent: @event =>
+             {
+                 Console.WriteLine("Factura nu a fost generata.");
+                 return @event;
+             });
         }
 
         static async Task PreluareComandaHandler(DbContextOptionsBuilder<OrderingContext> dbContextBuilder)
@@ -161,17 +182,18 @@ namespace ProiectPSSC
 
             return unvalidatedProducts_;
         }
-        static async Task<Tuple<string, string, string>> readInfo()
+        static async Task<List<UnvalidateInvoice>> readInfo()
         {
-            string? id, adress, payMetod;
+            List < UnvalidateInvoice > unvalidatedInvoice_ = new ();
+            string ? id, adress, payMetod;
             Console.Write("Id comanda: ");
             id = Console.ReadLine();
             Console.Write("Adressa de livrare: ");
             adress = Console.ReadLine();
             Console.Write("Metoda de plata: ");
             payMetod = Console.ReadLine();
-
-            return Tuple.Create(id, adress, payMetod);
+            unvalidatedInvoice_.Add(new UnvalidateInvoice(id, adress, payMetod));
+            return unvalidatedInvoice_;
 
         }
 

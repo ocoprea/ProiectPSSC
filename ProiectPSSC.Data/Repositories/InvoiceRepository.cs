@@ -14,25 +14,50 @@ namespace ProiectPSSC.Data.Repositories
 {
     public class InvoiceRepository : IInvoiceRepository
     {
-        private readonly OrderingContext orderingContext_;
+        
+        private readonly InvoiceContext invoiceContext_;
 
-        public InvoiceRepository(OrderingContext orderingContext)
+        public InvoiceRepository(InvoiceContext invoiceContext)
         {
-            orderingContext_ = orderingContext;
+            invoiceContext_ = invoiceContext;
         }
 
-        public TryAsync<Tuple<double, string>> TryFindCommand(int id) => async () =>
+        
+
+        public TryAsync<Tuple<double, string>> TryFindCommand(OrderId id) => async () =>
         {
+           
             Tuple<double, string> Tuple = new(0.0, "0");
-            var foundOrder = await orderingContext_.Orders
-                                                .Where(foundCommand => id == foundCommand.IdComanda)
+            var foundOrder = await invoiceContext_.Orders
+                                                .Where(foundCommand => id.Value == foundCommand.IdComanda.ToString())
                                                 .AsNoTracking()
                                                 .ToListAsync();
+           
             if (foundOrder.Count == 0)
-
+           
                 throw new OrderNotFoundException();
+   
             else return new Tuple<double, string>(foundOrder[0].PretTotal, foundOrder[0].StatusComanda);
 
+        };
+
+        public TryAsync<Tuple<int, float, float, float>> TrySaveNewInvoice(int orderId, float orderPrice) => async () =>
+        {
+            InvoiceDto newInvoice = new();
+            float discount;
+            newInvoice.IdComanda = orderId;
+            newInvoice.PretComanda = orderPrice;
+            if (orderPrice > 100)
+                discount = orderPrice * 0.1f;
+            else
+               discount = 0;
+            newInvoice.Discount = discount;
+            newInvoice.TotalPlata = orderPrice - discount;
+
+            await invoiceContext_.AddAsync(newInvoice);
+            await invoiceContext_.SaveChangesAsync();
+
+            return new Tuple<int, float, float, float>(newInvoice.IdComanda, newInvoice.PretComanda, newInvoice.Discount, newInvoice.TotalPlata);
         };
 
         public class OrderNotFoundException : ApplicationException

@@ -12,6 +12,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using System.Collections.Specialized;
 using LanguageExt.SomeHelp;
 using LanguageExt.ClassInstances;
+using ProiectPSSC.Domain.Commands;
 
 namespace ProiectPSSC.Domain.Operations
 {
@@ -41,11 +42,69 @@ namespace ProiectPSSC.Domain.Operations
                 if (!string.IsNullOrEmpty(reason_))
                 {
                     reason_ += " for Order " + invoice.orderId;
-                    return new UnValidatedInfo(invoices, reason_);
+                    return new InValidatedInfo(invoices, reason_);
                 }
             }
             return new PreValidatedInfo(preValidateInvoices_.ToArray());
         }
+
+        public static async Task<IInvoice> ValidateInfos(IInvoice preValidateInfo, IInvoiceRepository invoiceRepository) => await preValidateInfo.MatchAsync(
+            whenUnvalidatedInfo: async unvalidateInfo => unvalidateInfo,
+            whenPreValidatedInfo: async preValidateInfo_ =>
+            {
+                string? reason = null;
+                var preValidateInfos = preValidateInfo_.PreValidateInvoices;
+                List<ValidateInfo> validInfos = new();
+                
+                foreach (var invoice in preValidateInfos)
+                {
+                   
+                    var result = await invoiceRepository.TryFindCommand(invoice.orderId);
+                    
+                    result.Match(
+                        Succ: foundCommand =>
+                        {
+                            if (foundCommand.Item2 == "Nefinalizata")
+                            {
+                                validInfos.Add(new ValidateInfo(invoice.orderId, invoice.orderAdress, invoice.payMetod, foundCommand.Item1));
+                              
+                            }
+                            else
+                            { reason = "Comanda deja finalizata";
+                                
+                            }
+                        },
+                        Fail: exception =>
+                        {
+                            reason = "Order not found";
+                        });
+                    if (!string.IsNullOrEmpty(reason))
+                        return new InValidatedInfo(null, reason);
+                }
+                return new ValidatedInfo(validInfos.ToArray());
+            },
+            whenValidatedInfo: async validateInfo => validateInfo,
+            whenInValidatedInfo: async invalidateInfo => invalidateInfo,
+            whenGeneratedInvoice: async generateInvoice => generateInvoice
+            );
+
+        public static async Task<IInvoice> CreateNewInvoice(IInvoice validatedInfo, IInvoiceRepository invoiceRepository) => await validatedInfo.MatchAsync(
+            whenUnvalidatedInfo: async unvalidateInfo => unvalidateInfo,
+            whenPreValidatedInfo: async prevalidateInfo => prevalidateInfo,
+            whenInValidatedInfo: async invalidateInfo => invalidateInfo,
+            whenValidatedInfo: async validatedInfo =>
+            {
+                IInvoice invoice = validatedInfo;
+                var q = from item in validatedInfo.ValidateInfos
+                        select (item.OrderId, item.Price).ToTuple();
+                int orderId = Convert.ToInt32(q.FirstOrDefault().Item1.Value);
+                float price = Convert.ToSingle(q.FirstOrDefault().Item2);
+                var result = from it in invoiceRepository.TrySaveNewInvoice(orderId, price).ToEither(ex => -1)
+                             select it;
+                return invoice;
+            },
+            whenGeneratedInvoice : async generateInvoice => generateInvoice
+            );
 
         private static TryAsync<OrderId> TryParseOrderId(string Id) => async () =>
         {
